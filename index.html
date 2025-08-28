@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Kadoex'e Özel Site</title>
+<style>
+  body{margin:0;padding:0;background:black;color:white;font-family:'Arial Black',sans-serif;text-align:center;overflow:hidden;}
+  #messages{margin-top:80px;font-size:26px;white-space:pre-line;min-height:120px;}
+  .star{position:absolute;background:white;border-radius:50%;opacity:0.8;animation:fall linear infinite;}
+  @keyframes fall{from{transform:translateY(-10px);}to{transform:translateY(100vh);}}
+  button{padding:15px 30px;font-size:20px;margin-top:30px;border:none;border-radius:8px;cursor:pointer;transition:0.3s;}
+  button:hover{background:#ff8800;}
+  #startBtn{background:#ff4444;color:white;}
+  #game{display:none;margin-top:30px;}
+  .board{display:grid;grid-template-columns:repeat(3,100px);grid-template-rows:repeat(3,100px);gap:5px;justify-content:center;margin:auto;}
+  .cell{background:#111;border:2px solid #555;font-size:40px;display:flex;justify-content:center;align-items:center;cursor:pointer;color:white;transition:0.3s;}
+  .win{color:#0ff;text-shadow:0 0 10px #0ff,0 0 20px #0ff,0 0 40px #0ff,0 0 80px #0ff;animation:neonGlow 1s ease-in-out infinite alternate;}
+  @keyframes neonGlow{from{text-shadow:0 0 5px #0ff,0 0 15px #0ff,0 0 30px #0ff;}to{text-shadow:0 0 20px #0ff,0 0 40px #0ff,0 0 80px #0ff;}}
+  #winner{margin-top:20px;font-size:28px;font-weight:bold;color:#0ff;text-shadow:0 0 10px #0ff,0 0 20px #0ff,0 0 40px #0ff;animation:neonGlow 1s ease-in-out infinite alternate;}
+  #restartBtn{display:none;margin-top:20px;background:#00ccff;color:white;}
+  #restartBtn:hover{background:#0088ff;}
+  #scoreboard{margin-top:20px;font-size:20px;font-weight:bold;color:#ffcc00;text-shadow:0 0 10px #ffcc00,0 0 20px #ffaa00;}
+</style>
+</head>
+<body>
+<div id="messages"></div>
+<button id="startBtn" style="display:none;">🎮 Abim için minik bir oyun 🎮</button>
+<div id="game">
+<div id="scoreboard">🧑 Sen: <span id="playerScore">0</span> | 🤖 Bilgisayar: <span id="computerScore">0</span> | 🤝 Beraberlik: <span id="drawScore">0</span></div>
+<div class="board" id="board"></div>
+<div id="winner"></div>
+<button id="restartBtn">🔄 Yeniden Oyna</button>
+</div>
+<script>
+const messages=["⚡ BU SİTE EDO (EDİZ) TARAFINDAN KADOEX’E ÖZEL HAZIRLANMIŞTIR ⚡","🌟 Selam Kadoex Abe İyi Akşamlar 🌟","Bu senin için kodladığım bir site","🔥 Abi büyük hayranınım, inşallah 1 milyon olursun 🔥"];
+let msgIndex=0,charIndex=0;
+const msgDiv=document.getElementById("messages");
+const startBtn=document.getElementById("startBtn");
+const restartBtn=document.getElementById("restartBtn");
+let playerScore=0,computerScore=0,drawScore=0;
+const playerScoreEl=document.getElementById("playerScore");
+const computerScoreEl=document.getElementById("computerScore");
+const drawScoreEl=document.getElementById("drawScore");
+function typeWriter(){if(msgIndex<messages.length){if(charIndex<messages[msgIndex].length){msgDiv.innerHTML+=messages[msgIndex].charAt(charIndex);charIndex++;setTimeout(typeWriter,50);}else{msgDiv.innerHTML+="<br><br>";charIndex=0;msgIndex++;setTimeout(typeWriter,800);}}else{startBtn.style.display="inline-block";}}
+typeWriter();
+function createStar(){const star=document.createElement("div");star.classList.add("star");document.body.appendChild(star);const size=Math.random()*3;star.style.width=star.style.height=size+"px";star.style.left=Math.random()*window.innerWidth+"px";star.style.top="-10px";const duration=Math.random()*3+2;star.style.animationDuration=duration+"s";setTimeout(()=>{star.remove();},duration*1000);}
+setInterval(createStar,100);
+const boardDiv=document.getElementById("board");
+const winnerDiv=document.getElementById("winner");
+let board,currentPlayer;
+function startGame(){board=Array(9).fill(null);currentPlayer="X";winnerDiv.innerText="";restartBtn.style.display="none";renderBoard();}
+function renderBoard(){boardDiv.innerHTML="";board.forEach((cell,i)=>{const cellDiv=document.createElement("div");cellDiv.className="cell";cellDiv.innerText=cell?cell:"";cellDiv.onclick=()=>makeMove(i);boardDiv.appendChild(cellDiv);});}
+function makeMove(i){if(!board[i]&&!checkWinner()){board[i]=currentPlayer;if(checkWinner()){highlightWinner();winnerDiv.innerText="🎉 Tebrikler! Sen Kazandın! 🎉";playerScore++;updateScore();restartBtn.style.display="inline-block";}else if(board.every(c=>c)){winnerDiv.innerText="🤝 Berabere!";drawScore++;updateScore();restartBtn.style.display="inline-block";}else{currentPlayer="O";aiMove();}renderBoard();}
+}
+function aiMove(){let emptyCells=board.map((v,i)=>v===null?i:null).filter(v=>v!==null);if(emptyCells.length>0){let move=emptyCells[Math.floor(Math.random()*emptyCells.length)];board[move]="O";if(checkWinner()){highlightWinner();winnerDiv.innerText="🤖 Bilgisayar Kazandı!";computerScore++;updateScore();restartBtn.style.display="inline-block";}else if(board.every(c=>c)){winnerDiv.innerText="🤝 Berabere!";drawScore++;updateScore();restartBtn.style.display="inline-block";}currentPlayer="X";renderBoard();}}
+function checkWinner(){const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];for(let combo of wins){const [a,b,c]=combo;if(board[a]&&board[a]===board[b]&&board[a]===board[c])return combo;}return null;}
+function highlightWinner(){const combo=checkWinner();if(combo){const cells=boardDiv.querySelectorAll(".cell");combo.forEach(i=>cells[i].classList.add("win"));}}
+function updateScore(){playerScoreEl.innerText=playerScore;computerScoreEl.innerText=computerScore;drawScoreEl.innerText=drawScore;}
+startBtn.onclick=()=>{document.getElementById("game").style.display="block";startGame();}
+restartBtn.onclick=()=>{startGame();}
+</script>
+</body>
+</html>
